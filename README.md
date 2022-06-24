@@ -1,0 +1,1 @@
+# nintendo-switch-physical-deals-email-bot
