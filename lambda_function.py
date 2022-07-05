@@ -1,38 +1,44 @@
 import boto3
 import os
 import praw
-from datetime import datetime
 from dotenv import load_dotenv,find_dotenv
+import Credentials
 
-cache = []
 
 def lambda_handler(event, context):
-  # Get today's date
-  current_date = date.today()
-
-  # Create Read-Only Reddit Instance
-  reddit = praw.Reddit(
-      client_id=CLIENT_ID,
-      client_secret=CLIENT_SECRET,
-      user_agent=USER_AGENT,
+  # Get credential parameters from Systems Manager Parameter Store
+  aws_client = boto3.client('ssm')
+  response = aws_client.get_parameters(
+      Names=[
+          'email_sender',
+          'email_recipient',
+          'client_id',
+          'client_secret',
+          'user_agent'
+      ],
+      WithDecryption=True
   )
 
-  subreddit = reddit.subreddit("NintendoSwitchDeals")
+  # Store credential parameters into Credentials object
+  credentials = Credentials(response['Parameters'])
+
+  # Create old deals list
+  # Create old deals file if it doesn't exist/Open old deals file and push to file
+  # Create new deals list
+  # Create Reddit Instance
+  # Find latest posts in r/NintendoSwitchDeals:
+    # If it fits filters: push to new deals list
+  # If new deals list is not empty: 
+    # Add new deals to email body text
+    # Set email credentials
+    # Send email and return json with email id if sent successfully
+  # Else:
+    # Notify no new deals, no email sent
+    # Return success json
   
-  # Get newest 25 posts from r/NintendoDeals
-  # Filter for physical deals
-  for submission in subreddit.new(limit=25):
-    if submission.link_flair_text == 'Physical Deal':
-      print(submission.title)
-      time=submission.created_utc
-      print(datetime.fromtimestamp(time))
-      
 
-
-
-
-  # Return response
-  return {
-      'statusCode': 200,
-      'body': json.dumps('Hello from Lambda!')
-  }
+  # Hello World Return response from Lambda:
+  # return {
+  #     'statusCode': 200,
+  #     'body': json.dumps('Hello from Lambda!')
+  # }
