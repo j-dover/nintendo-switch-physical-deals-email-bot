@@ -2,6 +2,7 @@ import boto3
 import os
 import praw
 from dotenv import load_dotenv,find_dotenv
+import json
 import Credentials
 
 
@@ -22,8 +23,40 @@ def lambda_handler(event, context):
   # Store credential parameters into Credentials object
   credentials = Credentials(response['Parameters'])
 
-  # Create old deals list
-  # Create old deals file if it doesn't exist/Open old deals file and push to file
+  # Create old deals list for caching data from file
+  old_deals = []
+
+  # If old deals file exists: read it and push to old deals list
+  file_path = "/tmp/old_deals.txt"
+  if os.path.exists(file_path):
+    # Read file data and push into old deals list
+    try:
+      print(f'Reading {file_path}')
+      with open(file_path, 'r') as file:
+        for submission_id in file:
+          old_deals.append(submission_id.strip("\n"))
+        
+    except OSError as error:
+      print(f'Failed to open {file_path}')
+      return {
+        'statusCode': 500,
+        'body': json.dumps(error)
+      }
+
+  # Else: Create old deals file
+  else: 
+    try:
+      file = open(file_path, 'a')
+      file.close()
+      print(f'Created file {file_path}')
+    except OSError as error:
+      print(f'Failed to create {file_path}')
+      return {
+        'statusCode': 500,
+        'body': json.dumps(error)
+      }
+
+
   # Create new deals list
   # Create Reddit Instance
   # Find latest posts in r/NintendoSwitchDeals:
