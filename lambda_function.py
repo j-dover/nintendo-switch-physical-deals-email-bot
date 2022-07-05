@@ -56,12 +56,30 @@ def lambda_handler(event, context):
         'body': json.dumps(error)
       }
 
-
   # Create new deals list
-  # Create Reddit Instance
-  # Find latest posts in r/NintendoSwitchDeals:
-    # If it fits filters: push to new deals list
-  # If new deals list is not empty: 
+  new_deals = []
+
+  # Create Reddit Instance to interact with Reddit API
+  reddit = praw.Reddit(
+      client_id=credentials.client_id,
+      client_secret=credentials.client_secret,
+      user_agent=credentials.user_agent,
+  )
+  subreddit = reddit.subreddit("NintendoSwitchDeals")
+
+  # Check the ten newest posts from r/NintendoDeals
+  # Filter for new physical deals in the US
+  for submission in subreddit.new(limit=10):
+    if submission.id not in old_deals and submission.link_flair_text == "Physical Deal" and "/US" in submission.title:
+      # For testing purposes:
+      print(submission.title)
+      time=submission.created_utc
+      print(datetime.fromtimestamp(time))
+
+      # Add the submission to the new deals list
+      new_deals.append(submission)
+
+  # If new deals list is not empty:
     # Add new deals to email body text
     # Set email credentials
     # Send email and return json with email id if sent successfully
