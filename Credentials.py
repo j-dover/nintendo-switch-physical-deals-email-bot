@@ -1,10 +1,10 @@
 import json
 
-class ParameterList:
+class Credentials:
     
   def __init__(self, response_parameters):
-    self.params = {}
+    self.credential_params = {}
 
     for parameter in response_parameters:
       name = parameter['Name']
-      self.params[name] = parameter['Value']
+      self.credential_params[name] = parameter['Value']
