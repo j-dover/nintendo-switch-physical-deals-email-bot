@@ -5,6 +5,30 @@ from dotenv import load_dotenv,find_dotenv
 import json
 import Credentials
 
+def find_nintendo_switch_physical_deals(app_client_id, app_client_secret, app_user_agent):
+  new_deals = []
+
+  # Create Reddit Instance to interact with Reddit API
+  reddit = praw.Reddit(
+      client_id=app_client_id,
+      client_secret=app_client_secret,
+      user_agent=app_user_agent,
+  )
+  subreddit = reddit.subreddit("NintendoSwitchDeals")
+
+  # Check the ten newest posts from r/NintendoDeals
+  # Filter for new physical deals in the US
+  for submission in subreddit.new(limit=10):
+    if submission.id not in old_deals and submission.link_flair_text == "Physical Deal" and "/US" in submission.title:
+      submission_creation_date = submission.created_utc
+      submission_creation_date = datetime.fromtimestamp(submission_creation_date)
+      print(f'{submission.title}, created {submission_creation_date}')
+
+      # Add the submission to the new deals list
+      new_deals.append(submission)
+
+  return new_deals
+
 
 def lambda_handler(event, context):
   # Get credential parameters from Systems Manager Parameter Store
@@ -44,7 +68,7 @@ def lambda_handler(event, context):
       }
 
   # Else: Create old deals file
-  else: 
+  else:
     try:
       file = open(file_path, 'a')
       file.close()
@@ -57,39 +81,38 @@ def lambda_handler(event, context):
       }
 
   # Create new deals list
-  new_deals = []
+  client_id = credentials.get_client_id()
+  client_secret = credentials.get_client_secret()
+  user_agent = credentials.get_user_agent()
+  new_deals = find_nintendo_switch_physical_deals(client_id, client_secret, user_agent)
+  
+  # new_deals = []
 
-  # Create Reddit Instance to interact with Reddit API
-  reddit = praw.Reddit(
-      client_id=credentials.client_id,
-      client_secret=credentials.client_secret,
-      user_agent=credentials.user_agent,
-  )
-  subreddit = reddit.subreddit("NintendoSwitchDeals")
+  # # Create Reddit Instance to interact with Reddit API
+  # reddit = praw.Reddit(
+  #     client_id=credentials.client_id,
+  #     client_secret=credentials.client_secret,
+  #     user_agent=credentials.user_agent,
+  # )
+  # subreddit = reddit.subreddit("NintendoSwitchDeals")
 
-  # Check the ten newest posts from r/NintendoDeals
-  # Filter for new physical deals in the US
-  for submission in subreddit.new(limit=10):
-    if submission.id not in old_deals and submission.link_flair_text == "Physical Deal" and "/US" in submission.title:
-      # For testing purposes:
-      print(submission.title)
-      time=submission.created_utc
-      print(datetime.fromtimestamp(time))
+  # # Check the ten newest posts from r/NintendoDeals
+  # # Filter for new physical deals in the US
+  # for submission in subreddit.new(limit=10):
+  #   if submission.id not in old_deals and submission.link_flair_text == "Physical Deal" and "/US" in submission.title:
+  #     # For testing purposes:
+  #     print(submission.title)
+  #     time=submission.created_utc
+  #     print(datetime.fromtimestamp(time))
 
-      # Add the submission to the new deals list
-      new_deals.append(submission)
+  #     # Add the submission to the new deals list
+  #     new_deals.append(submission)
 
   # If new deals list is not empty:
     # Add new deals to email body text
+
     # Set email credentials
     # Send email and return json with email id if sent successfully
   # Else:
     # Notify no new deals, no email sent
     # Return success json
-  
-
-  # Hello World Return response from Lambda:
-  # return {
-  #     'statusCode': 200,
-  #     'body': json.dumps('Hello from Lambda!')
-  # }
