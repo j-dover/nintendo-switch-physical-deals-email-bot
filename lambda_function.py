@@ -33,7 +33,8 @@ def find_nintendo_switch_physical_deals(app_client_id, app_client_secret, app_us
 
 def lambda_handler(event, context):
   # Get credential parameters from Systems Manager Parameter Store
-  aws_client = boto3.client('ssm')
+  AWS_REGION = os.environ.get('AWS_REGION')
+  aws_client = boto3.client('ssm', region_name=AWS_REGION)
   response = aws_client.get_parameters(
       Names=[
           'email_sender',
@@ -60,7 +61,6 @@ def lambda_handler(event, context):
       with open(file_path, 'r') as file:
         for submission_id in file:
           old_deals.append(submission_id.strip("\n"))
-        
     except OSError as error:
       print(f'Failed to open {file_path}')
       return {
@@ -94,7 +94,6 @@ def lambda_handler(event, context):
     for submission in new_deals:
       deal_link = f'{submission.url}\r\n'
       body_text += deal_link
-    
     print("Body Text:")
     print(body_text)
 
@@ -115,12 +114,64 @@ def lambda_handler(event, context):
     </html>
     
     """.format(html_deals)
-
     print("Body HTML:")
     print(body_html)
 
     # Set email credentials
-    # Send email and return json with email id if sent successfully
-  # Else:
+    SENDER = credentials.get_email_sender()
+    RECIPIENT = credentials.get_email_recipient()
+    SUBJECT = "New from r/NintendoSwitchDeals!"
+    CHARSET = "UTF-8"
+
+    # Send email with SES SDK and return json with email id if sent successfully
+    # Code modified from "Sending email through Amazon SES using an AWS SDK" by Amazon Simple Email Service Developer Guide
+    # https://docs.aws.amazon.com/ses/latest/dg/send-an-email-using-sdk-programmatically.html
+    aws_client = boto3.client('ses',region_name=AWS_REGION)
+    try:
+        response = client.send_email(
+            Destination={
+                'ToAddresses': [
+                    RECIPIENT,
+                ],
+            },
+            Message={
+                'Body': {
+                    'Html': {
+                        'Charset': CHARSET,
+                        'Data': body_html,
+                    },
+                    'Text': {
+                        'Charset': CHARSET,
+                        'Data': body_text,
+                    },
+                },
+                'Subject': {
+                    'Charset': CHARSET,
+                    'Data': SUBJECT,
+                },
+            },
+            Source=SENDER,
+        )
+    # Display an error if something goes wrong.	
+    except ClientError as error:
+        print(error.response['Error']['Message'])
+        return {
+            'statusCode': 400,
+            'body': json.dumps(e.response['Error']['Message'])
+        }
+    else:
+        message_id = response['MessageId']
+        print(f"Email sent to {SENDER}! Message ID: {message_id}"),
+        return {
+            'statusCode': 200,
+            'body': json.dumps(f"Email sent to {SENDER}! Message ID: {message_id}")
+        }
+  else:
     # Notify no new deals, no email sent
+    print("There are 0 new deals. Thus, no email was sent to user.")
+
     # Return success json
+    return {
+        'statusCode': 200,
+        'body': json.dumps('No new deals!')
+    }
