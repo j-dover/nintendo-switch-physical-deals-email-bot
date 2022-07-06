@@ -112,8 +112,8 @@ def lambda_handler(event, context):
     print(body_html)
 
     # Set email credentials
-    SENDER = credentials.get_email_sender()
-    RECIPIENT = credentials.get_email_recipient()
+    SENDER = credentials.get_sender_email()
+    RECIPIENT = credentials.get_recipient_email()
     SUBJECT = "New from r/NintendoSwitchDeals!"
     CHARSET = "UTF-8"
 
