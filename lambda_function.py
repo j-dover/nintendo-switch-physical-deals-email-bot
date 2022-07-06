@@ -5,6 +5,7 @@ from dotenv import load_dotenv,find_dotenv
 import json
 import Credentials
 
+
 def find_nintendo_switch_physical_deals(app_client_id, app_client_secret, app_user_agent):
   new_deals = []
 
@@ -80,36 +81,43 @@ def lambda_handler(event, context):
         'body': json.dumps(error)
       }
 
-  # Create new deals list
+  # Get new physical deals from r/NintendoSwitchDeals
   client_id = credentials.get_client_id()
   client_secret = credentials.get_client_secret()
   user_agent = credentials.get_user_agent()
   new_deals = find_nintendo_switch_physical_deals(client_id, client_secret, user_agent)
-  
-  # new_deals = []
-
-  # # Create Reddit Instance to interact with Reddit API
-  # reddit = praw.Reddit(
-  #     client_id=credentials.client_id,
-  #     client_secret=credentials.client_secret,
-  #     user_agent=credentials.user_agent,
-  # )
-  # subreddit = reddit.subreddit("NintendoSwitchDeals")
-
-  # # Check the ten newest posts from r/NintendoDeals
-  # # Filter for new physical deals in the US
-  # for submission in subreddit.new(limit=10):
-  #   if submission.id not in old_deals and submission.link_flair_text == "Physical Deal" and "/US" in submission.title:
-  #     # For testing purposes:
-  #     print(submission.title)
-  #     time=submission.created_utc
-  #     print(datetime.fromtimestamp(time))
-
-  #     # Add the submission to the new deals list
-  #     new_deals.append(submission)
 
   # If new deals list is not empty:
-    # Add new deals to email body text
+  if new_deals:
+    # Add new deals to email body text for non-HTML email clients
+    body_text = "Nintendo Switch Physical Deals Email Bot presents:\r\n"
+    for submission in new_deals:
+      deal_link = f'{submission.url}\r\n'
+      body_text += deal_link
+    
+    print("Body Text:")
+    print(body_text)
+
+    # Add new deals to HTML email body
+    html_deals = ""
+    for submission in new_deals:
+      deal = f'<a href="{submission.url}">{submission.title}</a><br>'
+      html_deals += deal
+
+    body_html = """<html>
+    <head></head>
+    <body style="font-family: Verdana, sans-serif">
+      <h1>Nintendo Switch Physical Deals Email Bot presents:</h1><br>
+      <p>
+        {}
+      </p>
+    </body>
+    </html>
+    
+    """.format(html_deals)
+
+    print("Body HTML:")
+    print(body_html)
 
     # Set email credentials
     # Send email and return json with email id if sent successfully
