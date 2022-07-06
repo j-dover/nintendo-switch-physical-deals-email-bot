@@ -2,10 +2,10 @@ import boto3
 import os
 import praw
 import json
-import Credentials
+from Credentials import Credentials
 
 
-def find_nintendo_switch_physical_deals(app_client_id, app_client_secret, app_user_agent):
+def find_nintendo_switch_physical_deals(app_client_id, app_client_secret, app_user_agent, old_deals):
   new_deals = []
 
   # Create Reddit Instance to interact with Reddit API
@@ -84,7 +84,7 @@ def lambda_handler(event, context):
   client_id = credentials.get_client_id()
   client_secret = credentials.get_client_secret()
   user_agent = credentials.get_user_agent()
-  new_deals = find_nintendo_switch_physical_deals(client_id, client_secret, user_agent)
+  new_deals = find_nintendo_switch_physical_deals(client_id, client_secret, user_agent, old_deals)
 
   # If new deals list is not empty:
   if new_deals:
