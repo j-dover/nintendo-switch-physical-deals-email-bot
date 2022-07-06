@@ -2,6 +2,7 @@ import boto3
 import os
 import praw
 import json
+from botocore.exceptions import ClientError
 from Credentials import Credentials
 
 
@@ -122,7 +123,7 @@ def lambda_handler(event, context):
     # https://docs.aws.amazon.com/ses/latest/dg/send-an-email-using-sdk-programmatically.html
     aws_client = boto3.client('ses',region_name=AWS_REGION)
     try:
-        response = client.send_email(
+        response = aws_client.send_email(
             Destination={
                 'ToAddresses': [
                     RECIPIENT,
@@ -151,7 +152,7 @@ def lambda_handler(event, context):
         print(error.response['Error']['Message'])
         return {
             'statusCode': 400,
-            'body': json.dumps(e.response['Error']['Message'])
+            'body': json.dumps(error.response['Error']['Message'])
         }
     else:
         message_id = response['MessageId']
