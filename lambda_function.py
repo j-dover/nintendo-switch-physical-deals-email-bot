@@ -1,7 +1,6 @@
 import boto3
 import os
 import praw
-from dotenv import load_dotenv,find_dotenv
 import json
 import Credentials
 
