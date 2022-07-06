@@ -20,13 +20,8 @@ def find_nintendo_switch_physical_deals(app_client_id, app_client_secret, app_us
   # Filter for new physical deals in the US
   for submission in subreddit.new(limit=10):
     if submission.id not in old_deals and submission.link_flair_text == "Physical Deal" and "/US" in submission.title:
-      submission_creation_date = submission.created_utc
-      submission_creation_date = datetime.fromtimestamp(submission_creation_date)
-      print(f'{submission.title}, created {submission_creation_date}')
-
       # Add the submission to the new deals list
       new_deals.append(submission)
-
   return new_deals
 
 
