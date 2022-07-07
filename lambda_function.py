@@ -72,7 +72,7 @@ def lambda_handler(event, context):
       print(f'Failed to open {file_path}')
       return {
         'statusCode': 500,
-        'body': json.dumps(error)
+        'body': json.dumps(f'{error}')
       }
 
   # Else: Create old deals file
@@ -85,7 +85,7 @@ def lambda_handler(event, context):
       print(f'Failed to create {file_path}')
       return {
         'statusCode': 500,
-        'body': json.dumps(error)
+        'body': json.dumps(f'{error}')
       }
 
   # Get new physical deals from r/NintendoSwitchDeals
@@ -168,7 +168,20 @@ def lambda_handler(event, context):
         }
     else:
         message_id = response['MessageId']
-        print(f"Email sent to {SENDER}! Message ID: {message_id}"),
+        print(f"Email sent to {SENDER}! Message ID: {message_id}")
+
+        # Open old_deals.txt file to update with new deals
+        try:
+          print(f'Appending new deals to {file_path}')
+          with open(file_path, 'a') as file:
+            for submission in new_deals:
+              file.write(f'{submission.id}\n')
+        except OSError as error:
+          print(f'Failed to open {file_path}')
+          return {
+            'statusCode': 500,
+            'body': json.dumps(f'{error}')
+          }
         return {
             'statusCode': 200,
             'body': json.dumps(f"Email sent to {SENDER}! Message ID: {message_id}")
