@@ -7,6 +7,12 @@ from Credentials import Credentials
 
 
 def find_nintendo_switch_physical_deals(app_client_id, app_client_secret, app_user_agent, old_deals):
+  """
+  Creates a Reddit instance and searches for new physical US deals through the ten newest submissions
+  from r/NintendoSwitchDeals
+
+  Returns a list of subreddit objects if it finds one or more deals or an empty list
+  """
   new_deals = []
 
   # Create Reddit Instance to interact with Reddit API
@@ -17,7 +23,7 @@ def find_nintendo_switch_physical_deals(app_client_id, app_client_secret, app_us
   )
   subreddit = reddit.subreddit("NintendoSwitchDeals")
 
-  # Check the ten newest posts from r/NintendoDeals
+  # Check the ten newest posts from r/NintendoSwitchDeals
   # Filter for new physical deals in the US
   for submission in subreddit.new(limit=10):
     if submission.id not in old_deals and submission.link_flair_text == "Physical Deal" and "/US" in submission.title:
@@ -27,6 +33,12 @@ def find_nintendo_switch_physical_deals(app_client_id, app_client_secret, app_us
 
 
 def lambda_handler(event, context):
+  """
+  Tries to find new Nintendo Switch deals on physical products and might
+  send an email through Amazon Simple Email Service (SES) SDK to notify user
+
+  Returns JSON that notifies if it sent an email or not
+  """
   # Get credential parameters from Systems Manager Parameter Store
   AWS_REGION = os.environ.get('AWS_REGION')
   aws_client = boto3.client('ssm', region_name=AWS_REGION)
